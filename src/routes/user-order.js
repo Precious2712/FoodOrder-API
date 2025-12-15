@@ -11,6 +11,6 @@ const verifyUser = require('../middleware/verifyUserWithToken');
 
 app.post('/create-order', verifyUser, createUserOrder);
 
-app.get('/user-order/:id', verifyUser, getUserOrder);
+app.get('/user-order/:id',  getUserOrder);
 
 module.exports = app;

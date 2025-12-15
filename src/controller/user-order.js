@@ -79,36 +79,32 @@ const createUserOrder = async (req, res) => {
 };
 
 
+
 const getUserOrder = async (req, res) => {
     const { id } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid user ID",
+        });
+    }
+
     try {
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid order ID",
-            });
-        }
+        const orders = await UserOrder.find({ userId: id });
+        console.log('user-placement-order', orders);
 
-        const order = await UserOrder.findById(id);
-
-        if (!order) {
+        if (!orders || orders.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: "Order not found",
             });
         }
 
-        if (order.userId.toString() !== req.user._id.toString()) {
-            return res.status(403).json({
-                success: false,
-                message: "You are not authorized to view this order",
-            });
-        }
-
         res.status(200).json({
             success: true,
-            order,
+            count: orders.length,
+            data: orders,
         });
     } catch (error) {
         console.error("Get order error:", error.message);
@@ -118,6 +114,8 @@ const getUserOrder = async (req, res) => {
         });
     }
 };
+
+
 
 module.exports = {
     createUserOrder,
