@@ -8,8 +8,8 @@ const createPaymentGateway = async (req, res) => {
         const user = req.user;
         const { amount } = req.body;
 
-        if (!amount) {
-            return res.status(400).json({ message: "Amount is required" });
+        if (!amount || amount <= 0) {
+            return res.status(400).json({ message: "Invalid amount" });
         }
 
         const reference = `PS_${crypto.randomUUID()}`;
@@ -19,9 +19,11 @@ const createPaymentGateway = async (req, res) => {
             user: user._id,
             name: user.name,
             email: user.email,
-            amount: amount * 100, 
+            amount: amount * 100,
             reference,
         });
+
+        console.log('payment', payment);
 
         return res.status(201).json({
             message: "Payment initialized",
@@ -36,9 +38,7 @@ const createPaymentGateway = async (req, res) => {
     }
 };
 
-/**
- * STEP 2: Verify payment manually (frontend calls this)
- */
+
 const verifyPayment = async (req, res) => {
     const { reference } = req.body;
 
@@ -53,7 +53,6 @@ const verifyPayment = async (req, res) => {
             return res.status(404).json({ message: "Reference not found" });
         }
 
-        // Prevent double verification
         if (payment.status === "PAID") {
             return res.json({ message: "Payment already verified" });
         }

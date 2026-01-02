@@ -10,10 +10,10 @@ const {
 
 const verifyUser = require('../middleware/verifyUserWithToken');
 
-app.post('/api/payments/init', verifyUser, createPaymentGateway);
+app.post('/payments/init', verifyUser, createPaymentGateway);
 
-app.post('/verifyPayment', verifyUser, verifyPayment);
+app.post('/payments/verify', verifyUser, verifyPayment);
 
-app.post('/paystackWebhook', paystackWebhook);
+app.post('/paystack/webhook', paystackWebhook);
 
 module.exports = app;
