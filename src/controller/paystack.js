@@ -14,26 +14,43 @@ const createPaymentGateway = async (req, res) => {
 
         const reference = `PS_${crypto.randomUUID()}`;
 
-        // Save transaction BEFORE Paystack opens modal
+        // 1️⃣ Save transaction in DB
         const payment = await Payment.create({
             user: user._id,
             name: user.name,
             email: user.email,
-            amount: amount * 100,
+            amount: amount * 100, // kobo
             reference,
         });
 
-        console.log('payment', payment);
+        // 2️⃣ Initialize Paystack transaction
+        const paystackRes = await axios.post(
+            "https://api.paystack.co/transaction/initialize",
+            {
+                email: payment.email,
+                amount: payment.amount,
+                reference: payment.reference,
+                callback_url: `${process.env.FRONTEND_URL}/checkout`, // or success page
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        );
 
-        return res.status(201).json({
-            message: "Payment initialized",
-            payment: payment.name,
+        console.log('paystackRes', paystackRes);
+        console.log('payment-gateway', payment);
+
+        // 3️⃣ Return Paystack payment URL
+        return res.status(200).json({
+            authorization_url: paystackRes.data.data.authorization_url,
             reference: payment.reference,
-            amount: payment.amount,
-            email: payment.email,
         });
+
     } catch (error) {
-        console.error(error);
+        console.error(error.response?.data || error.message);
         return res.status(500).json({ message: "Payment initialization failed" });
     }
 };

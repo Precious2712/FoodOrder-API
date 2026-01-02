@@ -68,7 +68,7 @@ const createUserOrder = async (req, res) => {
             message: "Order updated",
             order,
         });
-        console.log('user-order', order);
+        // console.log('user-order', order);
 
     } catch (error) {
         console.error("Create order error:", error.message);
