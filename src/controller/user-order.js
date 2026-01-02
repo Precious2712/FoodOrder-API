@@ -79,7 +79,6 @@ const createUserOrder = async (req, res) => {
 };
 
 
-
 const getUserOrder = async (req, res) => {
     const { id } = req.params;
 
@@ -116,8 +115,107 @@ const getUserOrder = async (req, res) => {
 };
 
 
+const increaseQuantity = async (req, res) => {
+    const { id: itemId } = req.params;
+    const userId = req.user.id;
+
+    try {
+        const order = await UserOrder.findOne({ userId });
+
+        if (!order) {
+            return res.status(404).json({
+                message: "Cart not found"
+            });
+        }
+
+        const item = order.items.find(
+            (el) => el._id.toString() === itemId
+        );
+
+        if (!item) {
+            return res.status(404).json({
+                message: "Item not found"
+            });
+        }
+
+        item.quantity += 1;
+
+        item.total = item.quantity * item.itemPrice;
+
+        order.grandTotal = order.items.reduce(
+            (sum, el) => sum + el.total,
+            0
+        );
+
+        await order.save();
+
+        res.status(200).json({
+            message: "Item quantity increased successfully",
+            item,
+            grandTotal: order.grandTotal
+        });
+
+    } catch (error) {
+        console.error("Increase quantity error:", error.message);
+        res.status(500).json({
+            message: "Server error"
+        });
+    }
+};
+
+const decreaseQuantity = async (req, res) => {
+    const { id: itemId } = req.params;
+    const userId = req.user.id;
+
+    try {
+        const order = await UserOrder.findOne({ userId });
+
+        if (!order) {
+            return res.status(404).json({
+                message: "Cart not found"
+            });
+        }
+
+        const item = order.items.find(
+            (el) => el._id.toString() === itemId
+        );
+
+        if (!item) {
+            return res.status(404).json({
+                message: "Item not found"
+            });
+        }
+
+        item.quantity -= 1;
+
+        item.total = item.quantity * item.itemPrice;
+
+        order.grandTotal = order.items.reduce(
+            (sum, el) => sum + el.total,
+            0
+        );
+
+        await order.save();
+
+        res.status(200).json({
+            message: "Item quantity increased successfully",
+            item,
+            grandTotal: order.grandTotal
+        });
+
+    } catch (error) {
+        console.error("Increase quantity error:", error.message);
+        res.status(500).json({
+            message: "Server error"
+        });
+    }
+}
+
+
 
 module.exports = {
     createUserOrder,
-    getUserOrder
+    getUserOrder,
+    increaseQuantity,
+    decreaseQuantity
 };
