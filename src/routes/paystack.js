@@ -3,14 +3,14 @@ const express = require('express');
 const app = express.Router();
 
 const {
-    createPaymentGatement,
+    createPaymentGateway,
     verifyPayment,
     paystackWebhook
 } = require('../controller/paystack');
 
 const verifyUser = require('../middleware/verifyUserWithToken');
 
-app.post('/api/payments/init', verifyUser, createPaymentGatement);
+app.post('/api/payments/init', verifyUser, createPaymentGateway);
 
 app.post('/verifyPayment', verifyUser, verifyPayment);
 

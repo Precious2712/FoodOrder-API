@@ -3,16 +3,21 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const PORT = process.env.PORT
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+
+app.use(
+    "/api/v1/paystack/webhook",
+    express.raw({ type: "application/json" })
+);
 
 app.use(express.json());
 app.use(cors());
 
 const auths = require('./src/routes/users');
 const order = require('./src/routes/user-order');
-const payment = require('/src/routes/paystack');
+const payment = require('./src/routes/paystack');
 
 app.use('/api/v1', auths);
 app.use('/api/v1', order);
