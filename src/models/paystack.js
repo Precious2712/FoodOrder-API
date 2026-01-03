@@ -47,13 +47,13 @@ const paymentSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-paymentSchema.index(
-    { user: 1, amount: 1, status: 1 },
-    {
-        unique: true,
-        partialFilterExpression: { status: "PENDING" },
-    }
-);
+// paymentSchema.index(
+//     { user: 1, amount: 1, status: 1 },
+//     {
+//         unique: true,
+//         partialFilterExpression: { status: "PENDING" },
+//     }
+// );
 
 
 const paymentGateWay = mongoose.model('paystack', paymentSchema);

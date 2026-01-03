@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(
+app.post(
     "/api/v1/paystack/webhook",
     express.raw({ type: "application/json" })
 );
@@ -21,7 +21,7 @@ const payment = require('./src/routes/paystack');
 
 app.use('/api/v1', auths);
 app.use('/api/v1', order);
-app.use('/api/v1', payment);
+app.use('/api/v1/paystack', payment);
 
 async function start() {
     try {

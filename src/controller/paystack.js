@@ -14,44 +14,32 @@ const createPaymentGateway = async (req, res) => {
 
         const amountInKobo = amount * 100;
 
-        let payment = await Payment.findOne({
+        // 🔒 ALWAYS create a new reference per attempt
+        const reference = `PS_${crypto.randomUUID()}`;
+
+        const payment = await Payment.create({
             user: user._id,
-            // amount: amountInKobo,
-            status: "PENDING",
+            name: user.name,
+            email: user.email,
+            amount: amountInKobo,
+            reference,
         });
 
-        if (!payment) {
-            payment = await Payment.create({
-                user: user._id,
-                name: user.name,
-                email: user.email,
-                amount: amountInKobo,
-                reference: `PS_${crypto.randomUUID()}`,
-                status: "PENDING",
-            });
-        }
-
-        // 2️⃣ Initialize Paystack transaction
         const paystackRes = await axios.post(
             "https://api.paystack.co/transaction/initialize",
             {
                 email: payment.email,
                 amount: payment.amount,
                 reference: payment.reference,
-                callback_url: `${process.env.FRONTEND_URL}/payment-success`, // or success page
+                callback_url: `${process.env.FRONTEND_URL}/payment-success`,
             },
             {
                 headers: {
                     Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-                    "Content-Type": "application/json",
                 },
             }
         );
 
-        console.log('paystackRes', paystackRes);
-        console.log('payment-gateway', payment);
-
-        // 3️⃣ Return Paystack payment URL
         return res.status(200).json({
             authorization_url: paystackRes.data.data.authorization_url,
             reference: payment.reference,
@@ -64,65 +52,68 @@ const createPaymentGateway = async (req, res) => {
 };
 
 
-const verifyPayment = async (req, res) => {
-    const { reference } = req.body;
+// const verifyPayment = async (req, res) => {
+//     const { reference } = req.body;
 
-    if (!reference) {
-        return res.status(400).json({ message: "Reference is required" });
-    }
+//     if (!reference) {
+//         return res.status(400).json({ message: "Reference is required" });
+//     }
 
-    try {
-        const payment = await Payment.findOne({ reference });
+//     try {
+//         const payment = await Payment.findOne({ reference });
 
-        if (!payment) {
-            return res.status(404).json({ message: "Reference not found" });
-        }
+//         if (!payment) {
+//             return res.status(404).json({ message: "Reference not found" });
+//         }
 
-        if (payment.status === "PAID") {
-            return res.json({ message: "Payment already verified" });
-        }
+//         if (payment.status === "PAID") {
+//             return res.json({ message: "Payment already verified" });
+//         }
 
-        const response = await axios.get(
-            `https://api.paystack.co/transaction/verify/${reference}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-                },
-            }
-        );
+//         const response = await axios.get(
+//             `https://api.paystack.co/transaction/verify/${reference}`,
+//             {
+//                 headers: {
+//                     Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+//                 },
+//             }
+//         );
 
-        const data = response.data.data;
+//         const data = response.data.data;
 
-        if (data.status === "success") {
-            payment.status = "PAID";
-            payment.channel = data.channel;
-            await payment.save();
+//         if (data.status === "success") {
+//             payment.status = "PAID";
+//             payment.channel = data.channel;
+//             await payment.save();
 
-            return res.json({ message: "Payment verified successfully" });
-        }
+//             return res.json({ message: "Payment verified successfully" });
+//         }
 
-        payment.status = "FAILED";
-        await payment.save();
+//         payment.status = "FAILED";
+//         await payment.save();
 
-        return res.status(400).json({ message: "Payment failed" });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: "Verification failed" });
-    }
-};
+//         return res.status(400).json({ message: "Payment failed" });
+//     } catch (error) {
+//         console.error(error);
+//         return res.status(500).json({ message: "Verification failed" });
+//     }
+// };
 
 
 const paystackWebhook = async (req, res) => {
-    const signature = crypto
+    const hash = crypto
         .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY)
-        .update(JSON.stringify(req.body))
+        .update(req.body)
         .digest("hex");
 
-    if (signature !== req.headers["x-paystack-signature"]) {
+    if (hash !== req.headers["x-paystack-signature"]) {
         return res.sendStatus(401);
     }
 
-    const event = req.body;
+    const event = JSON.parse(req.body.toString());
+
+    console.log('pay-stack-event', event);
+    
 
     if (event.event === "charge.success") {
         await Payment.findOneAndUpdate(
@@ -147,6 +138,6 @@ const paystackWebhook = async (req, res) => {
 
 module.exports = {
     createPaymentGateway,
-    verifyPayment,
+    // verifyPayment,
     paystackWebhook,
 };
