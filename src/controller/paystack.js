@@ -16,19 +16,17 @@ const createPaymentGateway = async (req, res) => {
 
         let payment = await Payment.findOne({
             user: user._id,
-            amount: amountInKobo,
+            // amount: amountInKobo,
             status: "PENDING",
         });
 
         if (!payment) {
-            const reference = `PS_${crypto.randomUUID()}`;
-
             payment = await Payment.create({
                 user: user._id,
                 name: user.name,
                 email: user.email,
                 amount: amountInKobo,
-                reference,
+                reference: `PS_${crypto.randomUUID()}`,
                 status: "PENDING",
             });
         }
@@ -127,27 +125,25 @@ const paystackWebhook = async (req, res) => {
     const event = req.body;
 
     if (event.event === "charge.success") {
-        const reference = event.data.reference;
-
         await Payment.findOneAndUpdate(
-            { reference },
+            { reference: event.data.reference },
             {
                 status: "PAID",
                 channel: event.data.channel,
-            },
-            { new: true }
+            }
         );
     }
 
-    if (event.event === 'charge.failed') {
+    if (event.event === "charge.failed") {
         await Payment.findOneAndUpdate(
-            { reference },
+            { reference: event.data.reference },
             { status: "FAILED" }
-        )
+        );
     }
 
     res.sendStatus(200);
 };
+
 
 module.exports = {
     createPaymentGateway,
