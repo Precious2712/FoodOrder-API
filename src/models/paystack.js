@@ -23,7 +23,7 @@ const paymentSchema = new mongoose.Schema(
         },
 
         amount: {
-            type: Number, // stored in kobo
+            type: Number, 
             required: true,
         },
 
@@ -41,11 +41,20 @@ const paymentSchema = new mongoose.Schema(
         },
 
         channel: {
-            type: String, // card, bank, ussd
+            type: String, 
         },
     },
     { timestamps: true }
 );
+
+paymentSchema.index(
+    { user: 1, amount: 1, status: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { status: "PENDING" },
+    }
+);
+
 
 const paymentGateWay = mongoose.model('paystack', paymentSchema);
 

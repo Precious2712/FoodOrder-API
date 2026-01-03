@@ -91,7 +91,7 @@ const getUserOrder = async (req, res) => {
 
     try {
         const orders = await UserOrder.find({ userId: id });
-        console.log('user-placement-order', orders);
+        // console.log('user-placement-order', orders);
 
         if (!orders || orders.length === 0) {
             return res.status(404).json({

@@ -12,16 +12,26 @@ const createPaymentGateway = async (req, res) => {
             return res.status(400).json({ message: "Invalid amount" });
         }
 
-        const reference = `PS_${crypto.randomUUID()}`;
+        const amountInKobo = amount * 100;
 
-        // 1️⃣ Save transaction in DB
-        const payment = await Payment.create({
+        let payment = await Payment.findOne({
             user: user._id,
-            name: user.name,
-            email: user.email,
-            amount: amount * 100, // kobo
-            reference,
+            amount: amountInKobo,
+            status: "PENDING",
         });
+
+        if (!payment) {
+            const reference = `PS_${crypto.randomUUID()}`;
+
+            payment = await Payment.create({
+                user: user._id,
+                name: user.name,
+                email: user.email,
+                amount: amountInKobo,
+                reference,
+                status: "PENDING",
+            });
+        }
 
         // 2️⃣ Initialize Paystack transaction
         const paystackRes = await axios.post(
@@ -30,7 +40,7 @@ const createPaymentGateway = async (req, res) => {
                 email: payment.email,
                 amount: payment.amount,
                 reference: payment.reference,
-                callback_url: `${process.env.FRONTEND_URL}/checkout`, // or success page
+                callback_url: `${process.env.FRONTEND_URL}/payment-success`, // or success page
             },
             {
                 headers: {
@@ -124,8 +134,16 @@ const paystackWebhook = async (req, res) => {
             {
                 status: "PAID",
                 channel: event.data.channel,
-            }
+            },
+            { new: true }
         );
+    }
+
+    if (event.event === 'charge.failed') {
+        await Payment.findOneAndUpdate(
+            { reference },
+            { status: "FAILED" }
+        )
     }
 
     res.sendStatus(200);
