@@ -52,54 +52,6 @@ const createPaymentGateway = async (req, res) => {
 };
 
 
-// const verifyPayment = async (req, res) => {
-//     const { reference } = req.body;
-
-//     if (!reference) {
-//         return res.status(400).json({ message: "Reference is required" });
-//     }
-
-//     try {
-//         const payment = await Payment.findOne({ reference });
-
-//         if (!payment) {
-//             return res.status(404).json({ message: "Reference not found" });
-//         }
-
-//         if (payment.status === "PAID") {
-//             return res.json({ message: "Payment already verified" });
-//         }
-
-//         const response = await axios.get(
-//             `https://api.paystack.co/transaction/verify/${reference}`,
-//             {
-//                 headers: {
-//                     Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-//                 },
-//             }
-//         );
-
-//         const data = response.data.data;
-
-//         if (data.status === "success") {
-//             payment.status = "PAID";
-//             payment.channel = data.channel;
-//             await payment.save();
-
-//             return res.json({ message: "Payment verified successfully" });
-//         }
-
-//         payment.status = "FAILED";
-//         await payment.save();
-
-//         return res.status(400).json({ message: "Payment failed" });
-//     } catch (error) {
-//         console.error(error);
-//         return res.status(500).json({ message: "Verification failed" });
-//     }
-// };
-
-
 const paystackWebhook = async (req, res) => {
     const hash = crypto
         .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY)

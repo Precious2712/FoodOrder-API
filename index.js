@@ -9,7 +9,8 @@ const PORT = process.env.PORT || 5000;
 
 app.post(
     "/api/v1/paystack/webhook",
-    express.raw({ type: "application/json" })
+    express.raw({ type: "application/json" }),
+    require("./src/controller/paystack").paystackWebhook
 );
 
 app.use(express.json());
