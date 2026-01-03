@@ -14,7 +14,12 @@ app.post(
 );
 
 app.use(express.json());
-app.use(cors());
+app.use(cors([
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:5175',
+    'https://food-order-six-gamma.vercel.app/login'
+]));
 
 const auths = require('./src/routes/users');
 const order = require('./src/routes/user-order');

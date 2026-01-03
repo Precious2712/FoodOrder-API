@@ -33,7 +33,7 @@ const createPaymentGateway = async (req, res) => {
                 email: payment.email,
                 amount: payment.amount,
                 reference: payment.reference,
-                callback_url: `${process.env.FRONTEND_URL}/payment-success`,
+                callback_url: `${process.env.PAYMENT_CALLBACK_URL}`,
             },
             {
                 headers: {
@@ -41,6 +41,8 @@ const createPaymentGateway = async (req, res) => {
                 },
             }
         );
+
+        console.log("Paystack callback:", process.env.PAYMENT_CALLBACK_URL);
 
         return res.status(200).json({
             authorization_url: paystackRes.data.data.authorization_url,

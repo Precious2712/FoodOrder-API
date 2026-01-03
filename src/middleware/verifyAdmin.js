@@ -15,6 +15,7 @@ const verifyAdmin = async (req, res, next) => {
         }
 
         const token = authHeader.split(" ")[1];
+        // console.log('Admin', token);
 
         // console.log("EXTRACTED TOKEN:", token);
 
@@ -25,7 +26,7 @@ const verifyAdmin = async (req, res, next) => {
             });
         }
 
-        const decoded = jwt.verify(token, process.env.SECRET_KEY);
+        const decoded = jwt.verify(token, process.env.ADMIN_SECRET_KEY);
 
         const admin = await AminPanel.findById(decoded.id).select('-password');
 
