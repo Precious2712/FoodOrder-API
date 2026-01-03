@@ -19,10 +19,13 @@ app.use(cors());
 const auths = require('./src/routes/users');
 const order = require('./src/routes/user-order');
 const payment = require('./src/routes/paystack');
+const admins = require('./src/routes/admin');
 
 app.use('/api/v1', auths);
 app.use('/api/v1', order);
 app.use('/api/v1/paystack', payment);
+app.use('/api/v1', admins);
+
 
 async function start() {
     try {

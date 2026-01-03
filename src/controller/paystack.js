@@ -2,6 +2,8 @@ const axios = require("axios");
 const crypto = require("crypto");
 
 const Payment = require("../models/paystack");
+const UserOrder = require("../models/user-order");
+const sendOrderEmail = require("../nodemailer/mailer");
 
 const createPaymentGateway = async (req, res) => {
     try {
@@ -64,32 +66,67 @@ const paystackWebhook = async (req, res) => {
 
     const event = JSON.parse(req.body.toString());
 
-    console.log('pay-stack-event', event);
-    
+    console.log("pay-stack-event:", event.event);
 
-    if (event.event === "charge.success") {
-        await Payment.findOneAndUpdate(
-            { reference: event.data.reference },
-            {
-                status: "PAID",
-                channel: event.data.channel,
-            }
-        );
+    const reference = event.data?.reference;
+    const email = event.data?.customer?.email;
+
+    if (!reference) {
+        return res.sendStatus(200);
     }
+
 
     if (event.event === "charge.failed") {
         await Payment.findOneAndUpdate(
-            { reference: event.data.reference },
-            { status: "FAILED" }
+            { reference },
+            {
+                status: "FAILED",
+                channel: event.data.channel,
+            }
         );
+
+        return res.sendStatus(200);
     }
 
-    res.sendStatus(200);
+    
+    if (event.event === "charge.success") {
+        const payment = await Payment.findOneAndUpdate(
+            { reference },
+            {
+                status: "PAID",
+                channel: event.data.channel,
+            },
+            { new: true }
+        );
+
+        if (!payment) {
+            return res.sendStatus(200);
+        }
+
+        const order = await UserOrder.findOne({
+            userId: payment.user,
+            receiptSent: false,
+        });
+
+        if (!order) {
+            return res.sendStatus(200);
+        }
+
+        await sendOrderEmail({
+            order,
+            email,
+        });
+
+        order.receiptSent = true;
+        await order.save();
+    }
+
+    return res.sendStatus(200);
 };
+
 
 
 module.exports = {
     createPaymentGateway,
-    // verifyPayment,
-    paystackWebhook,
+    paystackWebhook
 };

@@ -28,6 +28,7 @@ const orderItemSchema = new Schema({
         type: Number,
         required: true,
     },
+
 });
 
 const userOrderSchema = new Schema(
@@ -49,6 +50,11 @@ const userOrderSchema = new Schema(
             type: Number,
             required: true,
         },
+
+        receiptSent: {
+            type: Boolean,
+            default: false,
+        }
     },
     { timestamps: true }
 );

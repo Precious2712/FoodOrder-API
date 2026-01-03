@@ -9,9 +9,12 @@ const userField = new Schema({
     },
 
     email: {
-        required: [true, 'Email is required'],
         type: String,
-        unique: true
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true,
+        match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email address']
     },
 
     password: {
