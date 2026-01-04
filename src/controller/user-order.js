@@ -186,7 +186,7 @@ const decreaseQuantity = async (req, res) => {
             });
         }
 
-        item.quantity -= 1;
+        item.quantity = Math.max(1, item.quantity - 1);
 
         item.total = item.quantity * item.itemPrice;
 
@@ -212,10 +212,49 @@ const decreaseQuantity = async (req, res) => {
 }
 
 
+const deleteItem = async (req, res) => {
+    const userId = req.user._id;
+    const { id } = req.params;
+
+    try {
+        const order = await UserOrder.findOneAndUpdate(
+            { userId },
+            { $pull: { items: { _id: id } } },
+            { new: true }
+        );
+
+        if (!order) {
+            return res.status(404).json({
+                message: "Cart not found",
+            });
+        }
+
+        order.grandTotal = order.items.reduce(
+            (sum, item) => sum + item.total,
+            0
+        );
+
+        await order.save();
+
+        res.status(200).json({
+            message: "Item removed successfully",
+            items: order.items,
+            grandTotal: order.grandTotal,
+        });
+
+    } catch (error) {
+        console.error("Delete item error:", error.message);
+        res.status(500).json({
+            message: "Server error",
+        });
+    }
+};
+
 
 module.exports = {
     createUserOrder,
     getUserOrder,
     increaseQuantity,
-    decreaseQuantity
+    decreaseQuantity,
+    deleteItem
 };

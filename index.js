@@ -18,7 +18,7 @@ app.use(cors([
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5175',
-    'https://food-order-six-gamma.vercel.app/login'
+    'https://food-order-six-gamma.vercel.app'
 ]));
 
 const auths = require('./src/routes/users');

@@ -6,7 +6,8 @@ const {
     createUserOrder,
     getUserOrder,
     increaseQuantity,
-    decreaseQuantity
+    decreaseQuantity,
+    deleteItem
 } = require('../controller/user-order');
 
 const verifyUser = require('../middleware/verifyUserWithToken');
@@ -18,5 +19,7 @@ app.get('/user-order/:id', verifyUser, getUserOrder);
 app.put('/increase/:id', verifyUser, increaseQuantity);
 
 app.put('/decrease/:id', decreaseQuantity);
+
+app.delete('/delete-item/:id', verifyUser, deleteItem);
 
 module.exports = app;
