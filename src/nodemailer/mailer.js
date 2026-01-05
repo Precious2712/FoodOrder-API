@@ -8,7 +8,7 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const sendOrderEmail = async ({ order, email }) => {
+const sendOrderEmail = async ({ order, email, grandTotal }) => {
     const itemsHtml = order.items
         .map(
             (item) => `
@@ -131,7 +131,7 @@ const sendOrderEmail = async ({ order, email }) => {
 
                             <div class="total-section">
                                 <h2 style="color: #4F46E5;">Grand Total</h2>
-                                <h1>₦${order.sum}</h1>
+                                <h1>₦${grandTotal}</h1>
                             </div>
                         </div>
 

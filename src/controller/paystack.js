@@ -16,7 +16,6 @@ const createPaymentGateway = async (req, res) => {
 
         const amountInKobo = amount * 100;
 
-        // 🔒 ALWAYS create a new reference per attempt
         const reference = `PS_${crypto.randomUUID()}`;
 
         const payment = await Payment.create({
@@ -110,6 +109,8 @@ const paystackWebhook = async (req, res) => {
             receiptSent: false,
         });
 
+        const total = order.grandTotal
+
         if (!order) {
             return res.sendStatus(200);
         }
@@ -117,6 +118,7 @@ const paystackWebhook = async (req, res) => {
         await sendOrderEmail({
             order,
             email,
+            grandTotal: total
         });
 
         order.receiptSent = true;

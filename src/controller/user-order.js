@@ -114,18 +114,22 @@ const getUserOrder = async (req, res) => {
     }
 };
 
-
-const increaseQuantity = async (req, res) => {
+const updateQuantity = async (req, res) => {
     const { id: itemId } = req.params;
     const userId = req.user.id;
+    const { quantity } = req.body;
+
+    if (!quantity || quantity < 1) {
+        return res.status(400).json({
+            message: "Quantity must be at least 1",
+        });
+    }
 
     try {
         const order = await UserOrder.findOne({ userId });
 
         if (!order) {
-            return res.status(404).json({
-                message: "Cart not found"
-            });
+            return res.status(404).json({ message: "Cart not found" });
         }
 
         const item = order.items.find(
@@ -133,13 +137,10 @@ const increaseQuantity = async (req, res) => {
         );
 
         if (!item) {
-            return res.status(404).json({
-                message: "Item not found"
-            });
+            return res.status(404).json({ message: "Item not found" });
         }
 
-        item.quantity += 1;
-
+        item.quantity = quantity;
         item.total = item.quantity * item.itemPrice;
 
         order.grandTotal = order.items.reduce(
@@ -150,66 +151,15 @@ const increaseQuantity = async (req, res) => {
         await order.save();
 
         res.status(200).json({
-            message: "Item quantity increased successfully",
+            message: "Quantity updated",
             item,
-            grandTotal: order.grandTotal
+            grandTotal: order.grandTotal,
         });
-
     } catch (error) {
-        console.error("Increase quantity error:", error.message);
-        res.status(500).json({
-            message: "Server error"
-        });
+        console.error("Update quantity error:", error);
+        res.status(500).json({ message: "Server error" });
     }
 };
-
-const decreaseQuantity = async (req, res) => {
-    const { id: itemId } = req.params;
-    const userId = req.user.id;
-
-    try {
-        const order = await UserOrder.findOne({ userId });
-
-        if (!order) {
-            return res.status(404).json({
-                message: "Cart not found"
-            });
-        }
-
-        const item = order.items.find(
-            (el) => el._id.toString() === itemId
-        );
-
-        if (!item) {
-            return res.status(404).json({
-                message: "Item not found"
-            });
-        }
-
-        item.quantity = Math.max(1, item.quantity - 1);
-
-        item.total = item.quantity * item.itemPrice;
-
-        order.grandTotal = order.items.reduce(
-            (sum, el) => sum + el.total,
-            0
-        );
-
-        await order.save();
-
-        res.status(200).json({
-            message: "Item quantity increased successfully",
-            item,
-            grandTotal: order.grandTotal
-        });
-
-    } catch (error) {
-        console.error("Increase quantity error:", error.message);
-        res.status(500).json({
-            message: "Server error"
-        });
-    }
-}
 
 
 const deleteItem = async (req, res) => {
@@ -254,7 +204,6 @@ const deleteItem = async (req, res) => {
 module.exports = {
     createUserOrder,
     getUserOrder,
-    increaseQuantity,
-    decreaseQuantity,
+    updateQuantity,
     deleteItem
 };
