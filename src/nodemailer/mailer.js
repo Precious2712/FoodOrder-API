@@ -1,4 +1,12 @@
 const nodemailer = require("nodemailer");
+const UserOrder = require('../models/user-order');
+
+
+const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+};
+
 
 const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -8,21 +16,58 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const sendOrderEmail = async ({ order, email, grandTotal }) => {
-    const itemsHtml = order.items
-        .map(
-            (item) => `
-            <div class="item-card">
-                <img src="${item.image}" class="item-image" />
-                <div>
-                    <strong>${item.itemName}</strong><br/>
-                    ₦${item.itemPrice} × ${item.quantity} = ₦${item.total}
+
+const sendOrderEmail = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                message: "Email is required",
+            });
+        }
+
+        if (!validateEmail(email)) {
+            return res.status(400).json({
+                message: "Invalid email address format",
+            });
+        }
+
+        const userId = req.user._id;
+
+        const goods = await UserOrder.findOne({ userId });
+
+        if (!goods) {
+            return res.status(404).json({
+                message: "No order found for this user",
+            });
+        }
+
+        
+        if (!goods.items || goods.items.length === 0) {
+            return res.status(400).json({
+                message: "No items in the order",
+            });
+        }
+
+        const grandTotal = goods.grandTotal;
+
+        
+        const itemsHtml = goods.items
+            .map(
+                (item) => `
+                <div class="item-card">
+                    <img src="${item.image}" class="item-image" />
+                    <div class="item-details">
+                        <strong>${item.itemName}</strong><br/>
+                        ₦${item.itemPrice} × ${item.quantity} = ₦${item.total}
+                    </div>
                 </div>
-            </div>
-        `
-        )
-        .join("");
-          await transporter.sendMail({
+            `
+            )
+            .join("");
+
+        await transporter.sendMail({
             from: `"Punch Digital" <${process.env.GMAIL_USER}>`,
             to: email,
             subject: "Summary of Item Purchase",
@@ -34,7 +79,6 @@ const sendOrderEmail = async ({ order, email, grandTotal }) => {
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>Purchase Summary</title>
                     <style>
-                        /* (UNCHANGED STYLES — KEPT AS IS) */
                         body {
                             font-family: Arial, sans-serif;
                             line-height: 1.6;
@@ -143,7 +187,23 @@ const sendOrderEmail = async ({ order, email, grandTotal }) => {
                 </html>
             `,
         });
-        ;
+        
+        return res.status(200).json({
+            success: true,
+            message: "Email sent successfully",
+            emailSentTo: email
+        });
+
+    } catch (error) {
+        console.error("Email sending error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to send email",
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
+    }
 };
 
-module.exports = sendOrderEmail;
+module.exports = {
+    sendOrderEmail
+};
