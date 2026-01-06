@@ -18,9 +18,10 @@ const transporter = nodemailer.createTransport({
 
 
 const sendOrderEmail = async (req, res) => {
+    const { email } = req.body;
+    console.log('req-body', email);
+    
     try {
-        const { email } = req.body;
-
         if (!email) {
             return res.status(400).json({
                 message: "Email is required",
