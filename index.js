@@ -17,6 +17,16 @@ app.get('/', (req, res) => {
     res.send('Server listening to port 5000');
 });
 
+app.get('/api/v2/ping', (req, res) => {
+    console.log('🔔 Ping received');
+    return res.status(200).json({
+        status: 'ok',
+        service: 'Punch Digital API',
+        time: new Date().toISOString(),
+    });
+});
+
+
 app.use(express.json());
 
 app.use(cors({
