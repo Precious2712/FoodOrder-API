@@ -2,8 +2,8 @@ const axios = require("axios");
 const crypto = require("crypto");
 
 const Payment = require("../models/paystack");
-const UserOrder = require("../models/user-order");
-const sendOrderEmail = require("../nodemailer/mailer");
+// const UserOrder = require("../models/user-order");
+// const sendOrderEmail = require("../nodemailer/mailer");
 
 const createPaymentGateway = async (req, res) => {
     try {
@@ -70,10 +70,10 @@ const paystackWebhook = async (req, res) => {
     console.log("pay-stack-event:", event.event);
 
     const reference = event.data?.reference;
-    const email = event.data?.customer?.email;
+    // const email = event.data?.customer?.email;
 
     if (!reference) {
-        return res.sendStatus(200);
+        return res.sendStatus(401);
     }
 
 
@@ -101,28 +101,29 @@ const paystackWebhook = async (req, res) => {
         );
 
         if (!payment) {
-            return res.sendStatus(200);
+            return res.sendStatus(401);
         }
 
-        const order = await UserOrder.findOne({
-            userId: payment.user,
-            receiptSent: false,
-        });
+        // const order = await UserOrder.findOne({
+        //     userId: payment.user,
+        //     receiptSent: false,
+        // });
 
-        const total = order.grandTotal
+        // const total = order.grandTotal
 
-        if (!order) {
-            return res.sendStatus(200);
-        }
+        // if (!order) {
+        //     return res.sendStatus(200);
+        // }
 
-        await sendOrderEmail({
-            order,
-            email,
-            grandTotal: total
-        });
+        // await sendOrderEmail({
+        //     order,
+        //     email,
+        //     grandTotal: total
+        // });
 
-        order.receiptSent = true;
-        await order.save();
+        // order.receiptSent = true;
+        // await order.save();
+        return res.sendStatus(200);
     }
 
     return res.sendStatus(200);
