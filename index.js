@@ -13,6 +13,10 @@ app.post(
     require("./src/controller/paystack").paystackWebhook
 );
 
+app.get('/', (req, res) => {
+    res.send('Server listening to port 5000');
+});
+
 app.use(express.json());
 
 app.use(cors({

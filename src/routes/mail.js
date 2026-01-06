@@ -6,8 +6,8 @@ const {
     sendOrderEmail
 } = require('../nodemailer/mailer');
 
-// const verifyUser = require('../middleware/verifyUserWithToken');
+const verifyUser = require('../middleware/verifyUserWithToken');
 
-exp.post('/send-mail/products',  sendOrderEmail);
+exp.post('/send-mail', verifyUser, sendOrderEmail);
 
 module.exports = exp;
