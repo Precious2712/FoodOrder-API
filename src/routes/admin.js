@@ -8,7 +8,7 @@ const {
     getALLPayment
 } = require('../controller/admin');
 
-const adminToken = require('../middleware/verifyAdmin');
+// const adminToken = require('../middleware/verifyAdmin');
 
 app.post('/create-admin', createAdmin);
 
