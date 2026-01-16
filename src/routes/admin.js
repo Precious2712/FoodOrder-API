@@ -16,6 +16,6 @@ app.post('/log-admin', logAdmin)
 
 app.get('/get-admin', getProfile);
 
-app.get('/get-all-payment', adminToken, getALLPayment );
+app.get('/get-all-payment', getALLPayment );
 
 module.exports = app;
