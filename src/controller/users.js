@@ -1,4 +1,6 @@
 const Users = require('../models/users');
+const Paystack = require('../models/paystack');
+
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -104,7 +106,57 @@ const signInUsers = async (req, res) => {
     }
 }
 
+const dashboardPayment = async (req, res) => {
+    try {
+        const userPayment = await Paystack.find();
+
+        if (!userPayment) {
+            return res.status(404).json({
+                message: "Admin not found"
+            });
+        }
+
+        res.status(201).json({
+            mesage: 'Document found',
+            userPayment
+        })
+    } catch (error) {
+        console.error("Get Profile Error:", error);
+        return res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+};
+
+
+const checkUser = async (req, res) => {
+    const user = req.user;
+    try {
+        const userId = await Users.findById(user._id);
+        if (!userId) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        res.status(200).json({
+            message: 'user found',
+            userId
+        });
+
+    } catch (error) {
+        console.error("Get Profile Error:", error);
+        return res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+};
+
+
+
 module.exports = {
     createUser,
-    signInUsers
+    signInUsers,
+    dashboardPayment,
+    checkUser
 }
